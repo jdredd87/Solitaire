@@ -26,5 +26,8 @@ __recovery/
 *.err
 *.~*
 
+# recorded videos (large; published elsewhere)
+/media/
+
 # stray empty file (the real one is tests/SolitaireTests.dpr)
 /SolitaireTests.dpr

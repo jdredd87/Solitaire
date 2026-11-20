@@ -1,4 +1,4 @@
-﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <ProjectGuid>{660823B3-380B-4056-B82C-357AC1C1B963}</ProjectGuid>
         <ProjectVersion>20.5</ProjectVersion>
@@ -374,6 +374,7 @@
         <DCCReference Include="uStats.pas"/>
         <DCCReference Include="uAutoPlay.pas"/>
         <DCCReference Include="uSelfTest.pas"/>
+        <DCCReference Include="uDemo.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

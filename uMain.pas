@@ -43,6 +43,7 @@ type
     FHeads: array[0..2] of TText;
     FCells: array[0..8, 0..2] of TText;
     FSelfTest: TObject;
+    FDemo: TObject;
 
     function MakeButton(AParent: TFmxObject; const ACaption: string; AOnClick: TNotifyEvent): TButton;
     function MakeBarButton(const ACaption: string; AWidth: Single; AOnClick: TNotifyEvent): TRectangle;
@@ -112,7 +113,7 @@ implementation
 {$R *.fmx}
 
 uses
-  uSelfTest;
+  uSelfTest, uDemo;
 
 const
   PANEL_W = 320;
@@ -734,15 +735,24 @@ end;
 
 procedure TMainForm.FormCreate(Sender: TObject);
 var
-  SelfTesting: Boolean;
+  SelfTesting, Demo: Boolean;
 begin
   Randomize;
   SelfTesting := FindCmdLineSwitch('selftest');
+  Demo := not SelfTesting and DemoRequested;
   if SelfTesting then
-    PrepareSelfTestData;   // isolated folder: never touches the real statistics
+    PrepareSelfTestData    // isolated folder: never touches the real statistics
+  else if Demo then
+    PrepareDemoData;
 {$IFDEF MSWINDOWS}
-  // on the desktop the game opens filling the screen (the self-test sizes its own window)
-  if not SelfTesting then
+  // on the desktop the game opens filling the screen (the self-test sizes its own
+  // window; the demo uses a 16:9 window that suits a video)
+  if Demo then
+  begin
+    ClientWidth := 1280;
+    ClientHeight := 720;
+  end
+  else if not SelfTesting then
     WindowState := TWindowState.wsMaximized;
 {$ENDIF}
 
@@ -758,13 +768,16 @@ begin
   UpdateStatus;
 
   if SelfTesting then
-    FSelfTest := TSelfTest.Create(Self);
+    FSelfTest := TSelfTest.Create(Self)
+  else if Demo then
+    FDemo := TDemo.Create(Self);
 end;
 
 procedure TMainForm.FormDestroy(Sender: TObject);
 begin
   SaveGame;
   FreeAndNil(FSelfTest);
+  FreeAndNil(FDemo);
   FBoard.Game := nil;
   FreeAndNil(FHelpItems);
   FreeAndNil(FGame);

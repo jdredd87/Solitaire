@@ -8,6 +8,33 @@ A FireMonkey (Delphi 13 / RAD Studio 37.0) solitaire collection for Windows, And
 - Win effects: bouncing cards, fireworks, fountain, or random
 - Portrait and landscape layouts; unfinished deals are saved per game
 
+## Screenshots
+
+| Klondike | Spider |
+| --- | --- |
+| ![Klondike](docs/screenshots/klondike.png) | ![Spider](docs/screenshots/spider.png) |
+
+| FreeCell | Pyramid |
+| --- | --- |
+| ![FreeCell](docs/screenshots/freecell.png) | ![Pyramid](docs/screenshots/pyramid.png) |
+
+| TriPeaks | Winning: bouncing cards |
+| --- | --- |
+| ![TriPeaks](docs/screenshots/tripeaks.png) | ![Bouncing cards](docs/screenshots/win-bounce.png) |
+
+| Fireworks | Choosing a game | Phone: Klondike | Phone: TriPeaks |
+| --- | --- | --- | --- |
+| ![Fireworks](docs/screenshots/win-fireworks.png) | ![Choose a game](docs/screenshots/choose-game.png) | ![Klondike on a phone](docs/screenshots/phone-klondike.png) | ![TriPeaks on a phone](docs/screenshots/phone-tripeaks.png) |
+
+## Demo mode
+
+The app can play every game by itself, at a pace you can follow, which is handy for recording videos:
+
+- **Windows:** `Solitaire.exe -demo` (a 1280x720 window that closes after the last game)
+- **Phones:** put an empty file named `demo.flag` in the app's data folder and start the app; it loops until closed. On a debug Android build: `adb shell run-as <package> touch files/demo.flag`
+
+The demo keeps its own deals and statistics, so yours are untouched.
+
 ## Layout
 
 | Path | What |
@@ -17,7 +44,7 @@ A FireMonkey (Delphi 13 / RAD Studio 37.0) solitaire collection for Windows, And
 | `uBoard.pas` | Board control: layout, card drawing, animation, win effects |
 | `uMain.pas` | Form, toolbar, menus, help and options panels |
 | `uStats.pas` | Statistics and settings |
-| `uAutoPlay.pas`, `uSelfTest.pas` | Hint-following player and the in-app UI self-test |
+| `uAutoPlay.pas`, `uSelfTest.pas`, `uDemo.pas` | Hint-following player, the in-app UI self-test and the demo mode |
 | `tests\` | Console tests for the game engines |
 | `tools\` | Deploy, artwork and deployproj scripts |
 | `res\` | Icons and splash artwork |

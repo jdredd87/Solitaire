@@ -14,7 +14,8 @@ uses
   uGames in 'uGames.pas',
   uStats in 'uStats.pas',
   uAutoPlay in 'uAutoPlay.pas',
-  uSelfTest in 'uSelfTest.pas';
+  uSelfTest in 'uSelfTest.pas',
+  uDemo in 'uDemo.pas';
 
 {$R *.res}
 

@@ -141,6 +141,10 @@ type
     procedure SimulateTap(P, Index: Integer);
     procedure SimulateDrag(Src, Index, Dst: Integer);
     procedure SimulateDragTo(Src, Index: Integer; const Target: TPointF);
+    /// Where a card dragged onto pile Dst should be let go.
+    function DropCenter(Dst: Integer): TPointF;
+    /// One pointer event at a board position: 0 = press, 1 = move, 2 = release.
+    procedure SimulatePointer(Phase: Integer; const Pt: TPointF);
     /// Particles / flying cards / bounced cards currently alive in the win effect.
     function EffectObjectCount: Integer;
     /// True when every card is on the board and no two piles collide.
@@ -1357,16 +1361,30 @@ begin
   MouseUp(TMouseButton.mbLeft, [], Target.X, Target.Y);
 end;
 
-procedure TSolitaireBoard.SimulateDrag(Src, Index, Dst: Integer);
+function TSolitaireBoard.DropCenter(Dst: Integer): TPointF;
 var
   N: Integer;
 begin
   UpdateLayout;
   N := FGame.CardCount(Dst);
   if N > 0 then
-    SimulateDragTo(Src, Index, CardCenter(Dst, N - 1))
+    Result := CardCenter(Dst, N - 1)
   else
-    SimulateDragTo(Src, Index, CardRect(PilePos(Dst)).CenterPoint);
+    Result := CardRect(PilePos(Dst)).CenterPoint;
+end;
+
+procedure TSolitaireBoard.SimulatePointer(Phase: Integer; const Pt: TPointF);
+begin
+  case Phase of
+    0: MouseDown(TMouseButton.mbLeft, [ssLeft], Pt.X, Pt.Y);
+    1: MouseMove([ssLeft], Pt.X, Pt.Y);
+    2: MouseUp(TMouseButton.mbLeft, [], Pt.X, Pt.Y);
+  end;
+end;
+
+procedure TSolitaireBoard.SimulateDrag(Src, Index, Dst: Integer);
+begin
+  SimulateDragTo(Src, Index, DropCenter(Dst));
 end;
 
 function TSolitaireBoard.CheckLayout(out Msg: string): Boolean;
