@@ -1,0 +1,29 @@
+# build output
+/Win32/
+/Win64/
+/Android/
+/Android64/
+/iOSDevice64/
+/iOSSimARM64/
+/OSX64/
+/OSXARM64/
+/tests/out/
+*.dcu
+*.exe
+*.map
+*.rsm
+*.tds
+
+# IDE / machine-local
+__history/
+__recovery/
+*.local
+/Solitaire.local.props
+*.identcache
+*.dsk
+*.stat
+*.err
+*.~*
+
+# stray empty file (the real one is tests/SolitaireTests.dpr)
+/SolitaireTests.dpr

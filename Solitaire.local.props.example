@@ -1,0 +1,29 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <!-- Copy to Solitaire.local.props (ignored by git) and fill in your own values.
+         Without it the app builds with the bundle id com.example.solitaire and
+         iOS device builds are not signed. -->
+    <PropertyGroup>
+        <AppBundleId>com.yourcompany.solitaire</AppBundleId>
+        <!-- UDID of the iPhone/iPad that tools\deploy.ps1 iosdevice installs on -->
+        <TestDeviceId>YOUR-DEVICE-UDID</TestDeviceId>
+    </PropertyGroup>
+    <!-- Ad-hoc signing for real iPhones/iPads. Build with /p:BT_BuildType=Adhoc.
+         TEAMID       your Apple developer team id
+         PF_DevAdHoc  the signing certificate's name, or its SHA-1 when several
+                      identities in the Mac's keychain share a name
+         PROFILE-UUID an ad-hoc provisioning profile that includes the device
+         application-identifier is given in the extra entitlements because msbuild
+         leaves the template's own placeholder blank, and it must not be in the
+         shared template: the simulator will not launch with it signed in. -->
+    <PropertyGroup Condition="'$(Platform)'=='iOSDevice64'">
+        <PF_AutoCertificateAdHoc>False</PF_AutoCertificateAdHoc>
+        <PF_AutoMobileProvisionAdHoc>False</PF_AutoMobileProvisionAdHoc>
+        <PF_DevAdHoc>CERTIFICATE-SHA1</PF_DevAdHoc>
+        <PF_DevTeamIdAdHoc>TEAMID</PF_DevTeamIdAdHoc>
+        <PF_AppIdentifierAdHoc>TEAMID.com.yourcompany.solitaire</PF_AppIdentifierAdHoc>
+        <PF_KeyChainAccessAdhoc>TEAMID.com.yourcompany.solitaire;</PF_KeyChainAccessAdhoc>
+        <PF_MobileProvisionAdHoc>PROFILE-UUID</PF_MobileProvisionAdHoc>
+        <PF_MobileProvisionPathAdHoc>/Users/YOU/Library/Developer/Xcode/UserData/Provisioning Profiles/PROFILE-UUID.mobileprovision</PF_MobileProvisionPathAdHoc>
+        <PF_EntitlementExtraKeyValuesAdhoc>&lt;key&gt;application-identifier&lt;/key&gt;&lt;string&gt;TEAMID.com.yourcompany.solitaire&lt;/string&gt;&lt;key&gt;get-task-allow&lt;/key&gt;&lt;false/&gt;&lt;key&gt;com.apple.developer.team-identifier&lt;/key&gt;&lt;string&gt;TEAMID&lt;/string&gt;</PF_EntitlementExtraKeyValuesAdhoc>
+    </PropertyGroup>
+</Project>
