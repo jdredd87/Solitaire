@@ -19,6 +19,7 @@ __history/
 __recovery/
 *.local
 /Solitaire.local.props
+*.local.txt
 *.identcache
 *.dsk
 *.stat

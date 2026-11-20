@@ -1,0 +1,16 @@
+#!/bin/sh
+# Scans every commit about to be pushed, not just the newest one.
+check="$(git rev-parse --show-toplevel)/tools/hooks/check-private.sh"
+zero=0000000000000000000000000000000000000000
+while read local_ref local_sha remote_ref remote_sha; do
+  [ "$local_sha" = "$zero" ] && continue            # deleting a branch
+  if [ "$remote_sha" = "$zero" ]; then
+    commits=$(git rev-list "$local_sha" --not --remotes)
+  else
+    commits=$(git rev-list "$remote_sha..$local_sha")
+  fi
+  for c in $commits; do
+    sh "$check" "$c" || exit 1
+  done
+done
+exit 0
