@@ -26,6 +26,22 @@ A FireMonkey (Delphi 13 / RAD Studio 37.0) solitaire collection for Windows, And
 | --- | --- | --- | --- |
 | ![Fireworks](docs/screenshots/win-fireworks.png) | ![Choose a game](docs/screenshots/choose-game.png) | ![Klondike on a phone](docs/screenshots/phone-klondike.png) | ![TriPeaks on a phone](docs/screenshots/phone-tripeaks.png) |
 
+### Rotated phone (landscape)
+
+Turning the phone switches every game to a wide layout.
+
+| Klondike | Spider |
+| --- | --- |
+| ![Klondike, landscape](docs/screenshots/landscape-klondike.png) | ![Spider, landscape](docs/screenshots/landscape-spider.png) |
+
+| FreeCell | Pyramid |
+| --- | --- |
+| ![FreeCell, landscape](docs/screenshots/landscape-freecell.png) | ![Pyramid, landscape](docs/screenshots/landscape-pyramid.png) |
+
+| TriPeaks |
+| --- |
+| ![TriPeaks, landscape](docs/screenshots/landscape-tripeaks.png) |
+
 ## Demo mode
 
 The app can play every game by itself, at a pace you can follow, which is handy for recording videos:
