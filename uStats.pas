@@ -85,7 +85,7 @@ begin
   FFileName := TPath.Combine(AppDataDir, 'solitaire.ini');
   CurrentGame := 'klondike';
   WinEffect := 0;
-  CardStyle := 0;
+  CardStyle := 1;   // Classic
   Load;
 end;
 
@@ -152,7 +152,7 @@ begin
     try
       CurrentGame := LowerCase(Ini.ReadString('Settings', 'Game', 'klondike'));
       WinEffect := EnsureRange(Ini.ReadInteger('Settings', 'WinEffect', 0), 0, 3);
-      CardStyle := EnsureRange(Ini.ReadInteger('Settings', 'CardStyle', 0), 0, 1);
+      CardStyle := EnsureRange(Ini.ReadInteger('Settings', 'CardStyle', 1), 0, 1);
 
       Ini.ReadSection('Variants', Keys);
       for K in Keys do

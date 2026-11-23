@@ -43,6 +43,7 @@ type
     procedure Log(const S: string);
     procedure Check(Cond: Boolean; const Msg: string);
     procedure Shot(const Name: string);
+    procedure ShotCourts;
     procedure ShotControl(C: TControl; const Name: string);
     procedure GoStep(AStep: Integer);
     function StepSecs: Double;
@@ -151,6 +152,35 @@ begin
   except
     on E: Exception do
       Check(False, 'screenshot ' + Name + ': ' + E.Message);
+  end;
+end;
+
+procedure TSelfTest.ShotCourts;
+var
+  Cards: array[0..5] of TCard;
+  I: Integer;
+  B: TBitmap;
+begin
+  for I := 0 to 5 do
+  begin
+    Cards[I] := Default(TCard);
+    Cards[I].Rank := 11 + I mod 3;
+    if I < 3 then
+      Cards[I].Suit := suSpades
+    else
+      Cards[I].Suit := suHearts;
+    Cards[I].FaceUp := True;
+  end;
+  try
+    B := FForm.Board.SampleCards(Cards, 2);
+    try
+      B.SaveToFile(TPath.Combine(OutDir, '9-classic-courts.png'));
+    finally
+      B.Free;
+    end;
+  except
+    on E: Exception do
+      Check(False, 'court card sample: ' + E.Message);
   end;
 end;
 
@@ -634,12 +664,18 @@ begin
 
       ST_FILES:
         begin
-          // the classic card faces, on a game that shows all 52 of them
+          // both card faces, on a game that shows all 52 of them
+          FForm.SwitchGame(GameIndexOf('freecell'));
+          FForm.StartNewGame(1);
+          B.CardStyle := csModern;
+          Check(B.CheckLayout(Msg), 'modern card style: layout is valid ' + Msg);
+          Shot('9-modern-freecell');
           FForm.SwitchGame(GameIndexOf('freecell'));
           FForm.StartNewGame(1);
           B.CardStyle := csClassic;
           Check(B.CheckLayout(Msg), 'classic card style: layout is valid ' + Msg);
           Shot('9-classic-freecell');
+          ShotCourts;
           FForm.SwitchGame(GameIndexOf('spider'));
           Shot('9-classic-spider');
           FForm.ClientWidth := 390;
@@ -648,7 +684,6 @@ begin
           Shot('9-classic-portrait');
           FForm.ClientWidth := 1000;
           FForm.ClientHeight := 720;
-          B.CardStyle := csModern;
           FForm.SaveGame;
           for I := 0 to High(GAME_CLASSES) do
             Check(TFile.Exists(TPath.Combine(OutDir, 'game-' + GAME_CLASSES[I].GameId + '.dat')),

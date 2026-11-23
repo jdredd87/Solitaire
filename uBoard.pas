@@ -171,6 +171,8 @@ type
     property Game: TCardGame read FGame write SetGame;
     property WinEffect: TWinEffect read FWinEffect write FWinEffect;
     property CardStyle: TCardStyle read FCardStyle write SetCardStyle;
+    /// The given cards side by side, enlarged; for looking closely at the faces.
+    function SampleCards(const Cards: array of TCard; Zoom: Single): TBitmap;
     property OnChanged: TNotifyEvent read FOnChanged write FOnChanged;
     property OnNewGameRequest: TNotifyEvent read FOnNewGameRequest write FOnNewGameRequest;
   end;
@@ -568,6 +570,125 @@ var
     Pip(XR, Y, PipS);
   end;
 
+  { Court cards: a simple bust in a frame, drawn twice so it reads either way
+    up. U runs across the frame, V from its top edge (0) to its middle (1). }
+  procedure Court;
+  const
+    COL_SKIN = $FFF3D3B1;
+    COL_GOLD = $FFE0A92E;
+    COL_EYE  = $FF2A2320;
+    COL_LIP  = $FFB23A3A;
+    HAIR: array[11..13] of TAlphaColor = ($FF7A4A22, $FFB5722A, $FF5F5148);
+  var
+    PW, HH, HR: Single;
+    HC: TPointF;
+
+    function P(U, V: Single): TPointF;
+    begin
+      Result := PointF(T.Left + U * PW, T.Top + V * HH);
+    end;
+
+    procedure Poly(const A: array of Single; Color: TAlphaColor);
+    var
+      I: Integer;
+    begin
+      FTmpPath.Clear;
+      FTmpPath.MoveTo(P(A[0], A[1]));
+      I := 2;
+      while I < High(A) do
+      begin
+        FTmpPath.LineTo(P(A[I], A[I + 1]));
+        Inc(I, 2);
+      end;
+      FTmpPath.ClosePath;
+      C.Fill.Color := Color;
+      C.FillPath(FTmpPath, 1);
+    end;
+
+    // an ellipse about the middle of the head; offsets and radii in head radii
+    procedure Oval(DX, DY, RX, RY: Single; Color: TAlphaColor);
+    begin
+      C.Fill.Color := Color;
+      C.FillEllipse(RectF(HC.X + (DX - RX) * HR, HC.Y + (DY - RY) * HR,
+        HC.X + (DX + RX) * HR, HC.Y + (DY + RY) * HR), 1);
+    end;
+
+    procedure Box(U1, V1, U2, V2, Round: Single; Color: TAlphaColor);
+    begin
+      C.Fill.Color := Color;
+      C.FillRect(TRectF.Create(P(U1, V1), P(U2, V2)), Round * PW, Round * PW, AllCorners, 1);
+    end;
+
+    procedure Half;
+    var
+      E: Single;
+    begin
+      // hair behind the head
+      case ACard.Rank of
+        11: Box(0.29, 0.30, 0.71, 0.60, 0.08, HAIR[11]);
+        12: Box(0.27, 0.30, 0.73, 0.82, 0.10, HAIR[12]);
+        13: Oval(0, 0.25, 1.2, 1.35, HAIR[13]);
+      end;
+      Box(0.43, 0.50, 0.57, 0.72, 0, COL_SKIN);                                // neck
+      Poly([0.04, 1, 0.08, 0.80, 0.30, 0.66, 0.70, 0.66, 0.92, 0.80, 0.96, 1], Col);   // robe
+      Poly([0.36, 0.66, 0.50, 0.90, 0.64, 0.66, 0.56, 0.66, 0.50, 0.79, 0.44, 0.66], COL_GOLD);
+      Box(0.04, 0.94, 0.96, 1, 0, COL_GOLD);                                   // sash
+      Oval(0, 0, 1, 1, COL_SKIN);                                              // face
+      if ACard.Rank = 13 then
+        Oval(0, 0.68, 0.78, 0.46, HAIR[13])                                    // beard
+      else
+      begin
+        Oval(0, -0.62, 1.02, 0.42, HAIR[ACard.Rank]);                          // fringe
+        Oval(0, 0.52, 0.26, 0.09, COL_LIP);
+      end;
+      E := Max(0.11, 0.8 / HR);
+      Oval(-0.38, 0.08, E, E, COL_EYE);
+      Oval(0.38, 0.08, E, E, COL_EYE);
+      case ACard.Rank of
+        11:
+          begin   // a cap with a feather
+            Poly([0.30, 0.34, 0.33, 0.20, 0.67, 0.20, 0.70, 0.34], Col);
+            Box(0.30, 0.30, 0.70, 0.35, 0, COL_GOLD);
+            C.Stroke.Color := COL_GOLD;
+            C.Stroke.Thickness := Max(1, PW * 0.05);
+            C.DrawLine(P(0.64, 0.22), P(0.84, 0.05), 1);
+            C.Stroke.Thickness := 1;
+          end;
+        12:
+          begin   // a tiara
+            Poly([0.36, 0.33, 0.36, 0.20, 0.43, 0.26, 0.50, 0.14, 0.57, 0.26, 0.64, 0.20, 0.64, 0.33], COL_GOLD);
+            Oval(0, -1.02, 0.14, 0.14, Col);
+          end;
+        13:
+          begin   // a crown
+            Poly([0.31, 0.36, 0.31, 0.12, 0.405, 0.24, 0.50, 0.08, 0.595, 0.24, 0.69, 0.12, 0.69, 0.36], COL_GOLD);
+            Oval(0, -0.98, 0.16, 0.16, Col);
+            Oval(-0.62, -0.98, 0.11, 0.11, Col);
+            Oval(0.62, -0.98, 0.11, 0.11, Col);
+          end;
+      end;
+    end;
+
+  begin
+    T := RectF(R.Left + FCardW * 0.27, R.Top + FCardH * 0.13, R.Right - FCardW * 0.27, R.Bottom - FCardH * 0.13);
+    PW := T.Width;
+    HH := T.Height / 2;
+    HR := PW * 0.17;
+    HC := P(0.5, 0.46);
+    C.Fill.Color := Col;
+    C.FillRect(T, FCardW * 0.04, FCardW * 0.04, AllCorners, 0.09);
+    Half;
+    C.SetMatrix(Flip);
+    Half;
+    C.SetMatrix(Saved);
+    C.Stroke.Color := Col;
+    C.Stroke.Thickness := Max(1, FCardW * 0.015);
+    C.DrawRect(T, FCardW * 0.04, FCardW * 0.04, AllCorners, 0.8);
+    C.Stroke.Thickness := 1;
+    Pip(0.345, 0.19, FCardW * 0.11);
+    Pip(0.655, 0.81, FCardW * 0.11);
+  end;
+
 begin
   Saved := C.Matrix;
   // a half turn about the middle of the card
@@ -622,20 +743,26 @@ begin
         end;
       end;
   else
-    // court cards: a framed panel with the letter, and a suit in two of its corners
-    T := RectF(R.Left + FCardW * 0.27, R.Top + FCardH * 0.13, R.Right - FCardW * 0.27, R.Bottom - FCardH * 0.13);
-    C.Fill.Color := Col;
-    C.FillRect(T, FCardW * 0.04, FCardW * 0.04, AllCorners, 0.09);
-    C.Stroke.Color := Col;
-    C.Stroke.Thickness := Max(1, FCardW * 0.015);
-    C.DrawRect(T, FCardW * 0.04, FCardW * 0.04, AllCorners, 0.8);
-    C.Stroke.Thickness := 1;
-    C.Font.Size := FCardH * 0.30;
-    C.Font.Style := [TFontStyle.fsBold];
-    C.FillText(T, RankName(ACard.Rank), False, 1, [], TTextAlign.Center, TTextAlign.Center);
-    Pip(0.36, 0.215, FCardW * 0.14);
-    Pip(0.64, 0.785, FCardW * 0.14);
+    Court;
   end;
+end;
+
+function TSolitaireBoard.SampleCards(const Cards: array of TCard; Zoom: Single): TBitmap;
+var
+  I: Integer;
+  Gap: Single;
+begin
+  Gap := FCardW * 0.12;
+  Result := TBitmap.Create(Ceil((Length(Cards) * (FCardW + Gap) + Gap) * Zoom), Ceil((FCardH + 2 * Gap) * Zoom));
+  if Result.Canvas.BeginScene then
+    try
+      Result.Canvas.Clear(COL_FELT);
+      Result.Canvas.SetMatrix(TMatrix.CreateScaling(Zoom, Zoom));
+      for I := 0 to High(Cards) do
+        DrawCard(Result.Canvas, Cards[I], PointF(Gap + I * (FCardW + Gap), Gap));
+    finally
+      Result.Canvas.EndScene;
+    end;
 end;
 
 procedure TSolitaireBoard.DrawCard(C: TCanvas; const ACard: TCard; const Pos: TPointF; Strip: Single);
