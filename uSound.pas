@@ -1,7 +1,7 @@
 unit uSound;
 
-{ The game's two sounds: cards being shuffled when a new game is dealt, and a
-  short fanfare when a game is won. Both are synthesised here and written out
+{ The game's two sounds: cards being dealt when a new game starts, and a
+  short run of chimes when a game is won. Both are synthesised here and written out
   as small WAV files the first time they are needed, so the app ships no audio
   files. Playing never raises: a device without sound simply stays quiet. }
 
@@ -21,8 +21,8 @@ uses
   {$IFDEF MSWINDOWS}, Winapi.Windows, Winapi.MMSystem{$ELSE}, FMX.Media{$ENDIF};
 
 const
-  RATE = 22050;
-  FILE_NAMES: array[TSoundKind] of string = ('solitaire-shuffle-1.wav', 'solitaire-win-1.wav');
+  RATE = 44100;
+  FILE_NAMES: array[TSoundKind] of string = ('solitaire-deal-2.wav', 'solitaire-win-2.wav');
 
 type
   TSamples = TArray<Single>;
@@ -45,71 +45,69 @@ begin
   Result := (Noise + 1) / 2;
 end;
 
-{ Two riffles (a run of quick card flicks that gets faster) and a soft swish
-  as the pack is squared up. }
+{ Cards being dealt: a handful of quick paper flicks. Each one is a short burst
+  of hiss with the low end taken out (low rumble is what makes noise sound
+  rude) and a tiny snap as the card lands. }
 function MakeShuffle: TSamples;
+const
+  FLICKS = 7;
 var
-  R, I, N, At: Integer;
-  T, T0, Amp, Y: Single;
+  K, I, N, At: Integer;
+  T, Amp, Env, X, LP, Soft: Single;
 begin
-  SetLength(Result, Round(RATE * 1.5));
-  for R := 0 to 1 do
+  SetLength(Result, Round(RATE * 0.95));
+  T := 0.02;
+  for K := 0 to FLICKS - 1 do
   begin
-    T0 := 0.03 + R * 0.55;
-    T := T0;
-    while T < T0 + 0.42 do
+    Amp := 0.6 + Rand01 * 0.4;
+    At := Round(T * RATE);
+    N := Round(RATE * 0.075);
+    LP := 0;
+    Soft := 0;
+    for I := 0 to N - 1 do
     begin
-      Amp := 0.35 + Rand01 * 0.45;
-      At := Round(T * RATE);
-      N := Round(RATE * 0.012);
-      for I := 0 to N - 1 do
-        if At + I < Length(Result) then
-          Result[At + I] := Result[At + I] + Amp * Exp(-I / (RATE * 0.0025)) * Noise;
-      T := T + 0.020 - 0.012 * ((T - T0) / 0.42) + Rand01 * 0.004;
+      X := Noise;
+      LP := LP + 0.20 * (X - LP);          // what is below about 1.5 kHz ...
+      X := X - LP;                         // ... is removed
+      Soft := Soft + 0.65 * (X - Soft);    // and the very top is rounded off
+      Env := Min(1, I / (RATE * 0.008)) * Exp(-I / (RATE * 0.018));
+      if I >= N - Round(RATE * 0.012) then   // the snap
+        Env := Env + 1.3 * Exp(-(I - (N - Round(RATE * 0.012))) / (RATE * 0.0012));
+      if At + I < Length(Result) then
+        Result[At + I] := Result[At + I] + Amp * Env * Soft;
     end;
-  end;
-  At := Round(1.12 * RATE);
-  N := Round(0.32 * RATE);
-  for I := 0 to N - 1 do
-    if At + I < Length(Result) then
-      Result[At + I] := Result[At + I] + 0.28 * Sin(Pi * I / N) * Noise;
-  // take the hiss off
-  Y := 0;
-  for I := 0 to High(Result) do
-  begin
-    Y := Y + 0.5 * (Result[I] - Y);
-    Result[I] := Y;
+    T := T + 0.105 + (Rand01 - 0.5) * 0.02;
   end;
 end;
 
-{ A rising major arpeggio that ends on the full chord. }
+{ A rising run of chimes that ends on the full chord. }
 function MakeWin: TSamples;
 const
-  NOTES: array[0..3] of Single = (523.25, 659.25, 783.99, 1046.5);
+  NOTES: array[0..3] of Single = (1046.5, 1318.5, 1568.0, 2093.0);
 
-  procedure Tone(var A: TSamples; Freq, Start, Decay, Amp: Single);
+  procedure Chime(var A: TSamples; Freq, Start, Decay, Amp: Single);
   var
     I, At: Integer;
-    T, Env: Single;
+    T: Single;
   begin
     At := Round(Start * RATE);
     for I := 0 to Length(A) - At - 1 do
     begin
       T := I / RATE;
-      Env := Min(1, T / 0.005) * Exp(-T / Decay);
-      A[At + I] := A[At + I] + Amp * Env *
-        (Sin(2 * Pi * Freq * T) + 0.3 * Sin(4 * Pi * Freq * T) + 0.15 * Sin(6 * Pi * Freq * T));
+      A[At + I] := A[At + I] + Amp * Min(1, T / 0.003) *
+        (Exp(-T / Decay) * Sin(2 * Pi * Freq * T) +
+         0.3 * Exp(-T / 0.05) * Sin(2 * Pi * Freq * 3 * T));   // the bright strike
     end;
   end;
 
 var
   I: Integer;
 begin
-  SetLength(Result, Round(RATE * 1.9));
+  SetLength(Result, Round(RATE * 2.0));
   for I := 0 to High(NOTES) do
-    Tone(Result, NOTES[I], I * 0.13, 0.25, 0.22);
+    Chime(Result, NOTES[I], I * 0.11, 0.30, 0.25);
   for I := 0 to High(NOTES) do
-    Tone(Result, NOTES[I], 0.56, 0.42, 0.20);
+    Chime(Result, NOTES[I], 0.52, 0.55, 0.20);
 end;
 
 procedure SaveWav(const A: TSamples; const FileName: string);

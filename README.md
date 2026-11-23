@@ -7,7 +7,7 @@ A FireMonkey (Delphi 13 / RAD Studio 37.0) solitaire collection for Windows, And
 - Statistics kept per game and variant
 - Win effects: bouncing cards, fireworks, fountain, or random
 - Two card styles: Classic (corner indexes, traditional pips and pictured court cards; the default) and Modern (large rank and suit)
-- Optional sounds (a shuffle when a game is dealt, a fanfare on a win); off by default
+- Optional sounds (cards being dealt when a game starts, chimes on a win); off by default
 - Portrait and landscape layouts; unfinished deals are saved per game
 
 ## Screenshots
