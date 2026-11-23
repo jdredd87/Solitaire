@@ -905,6 +905,7 @@ begin
     FStats.RecordLoss(FGame.GameId, FGame.Variant);
   FGame.NewGame(FStats.GetVariant(FGame.GameId), ASeed);
   FBoard.Reset;
+  FBoard.AnimateDeal;
   if FStats.Sounds then
     PlayGameSound(skShuffle);
   UpdateStatus;

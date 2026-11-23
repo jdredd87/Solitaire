@@ -103,6 +103,7 @@ constructor TSelfTest.Create(AForm: TMainForm);
 begin
   inherited Create;
   FForm := AForm;
+  FForm.Board.DealAnimation := False;   // the checks look at the table right after a deal
   FLog := TStringList.Create;
   FTotalWatch := TStopwatch.StartNew;
   FStepWatch := TStopwatch.StartNew;
@@ -665,6 +666,12 @@ begin
 
       ST_FILES:
         begin
+          // a new game is dealt out card by card
+          B.DealAnimation := True;
+          FForm.StartNewGame(1);
+          Check(B.Animating, 'a new deal is animated');
+          B.DealAnimation := False;
+          Check(not B.Animating, 'the deal animation can be switched off');
           // both card faces, on a game that shows all 52 of them
           FForm.SwitchGame(GameIndexOf('freecell'));
           FForm.StartNewGame(1);

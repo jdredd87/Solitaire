@@ -61,6 +61,8 @@ type
     FTimer: TTimer;
     FWatch: TStopwatch;
     FAnimActive: Boolean;
+    FDealing: Boolean;          // the animation in progress is a fresh deal
+    FDealAnimation: Boolean;
     FAnimTime, FAnimDur, FAnimEnd: Single;
     FFlying: array[0..MAX_CARDS - 1] of Boolean;
     FFlyFrom: array[0..MAX_CARDS - 1] of TPointF;
@@ -100,6 +102,7 @@ type
     function IsFlying(const C: TCard): Boolean;
 
     procedure Sound(S: TBoardSound);
+    procedure SetDealAnimation(const Value: Boolean);
     procedure DrawSuit(C: TCanvas; Suit: TSuit; const R: TRectF; Color: TAlphaColor; Opacity: Single);
     procedure DrawCard(C: TCanvas; const ACard: TCard; const Pos: TPointF; Strip: Single = 0);
     procedure DrawClassicFace(C: TCanvas; const ACard: TCard; const R: TRectF; Col: TAlphaColor; Strip: Single);
@@ -181,6 +184,10 @@ type
     property OnChanged: TNotifyEvent read FOnChanged write FOnChanged;
     property OnNewGameRequest: TNotifyEvent read FOnNewGameRequest write FOnNewGameRequest;
     property OnSound: TBoardSoundEvent read FOnSound write FOnSound;
+    /// Lays a fresh deal out card by card. Call right after the game was dealt.
+    procedure AnimateDeal;
+    /// False makes AnimateDeal do nothing (and ends a deal that is under way).
+    property DealAnimation: Boolean read FDealAnimation write SetDealAnimation;
   end;
 
 implementation
@@ -216,6 +223,7 @@ begin
   FTimer.OnTimer := TimerTick;
   FDragPile := -1;
   FLastEffect := weRandom;
+  FDealAnimation := True;
   FCardW := 60;
   FCardH := 84;
 end;
@@ -973,7 +981,11 @@ begin
         Card := FGame.CardAt(P, I);
         if not FFlying[Card.Id] then
           Continue;
+        if FDealing and (FAnimTime < FFlyDelay[Card.Id]) then
+          Continue;   // still in the dealer's hand
         T := EnsureRange((FAnimTime - FFlyDelay[Card.Id]) / FAnimDur, 0, 1);
+        if FDealing and (T < 0.5) then
+          Card.FaceUp := False;   // dealt face down, turned over on the way
         E := 1 - Sqr(1 - T);
         Target := CardPos(P, I);
         DrawCard(C, Card, PointF(FFlyFrom[Card.Id].X + (Target.X - FFlyFrom[Card.Id].X) * E,
@@ -1173,7 +1185,69 @@ end;
 procedure TSolitaireBoard.FinishAnim;
 begin
   FAnimActive := False;
+  FDealing := False;
   FillChar(FFlying, SizeOf(FFlying), 0);
+end;
+
+procedure TSolitaireBoard.SetDealAnimation(const Value: Boolean);
+begin
+  FDealAnimation := Value;
+  if not Value and FDealing then
+  begin
+    FinishAnim;
+    Repaint;
+  end;
+end;
+
+{ A new game: the cards fly out one after another, a row at a time as a dealer
+  would, from the stock - or from below the table in a game that has none. }
+procedure TSolitaireBoard.AnimateDeal;
+var
+  P, Depth, MaxDepth, N, Seq: Integer;
+  From: TPointF;
+  Step: Single;
+  Card: TCard;
+begin
+  if (FGame = nil) or not FDealAnimation or (Width < 10) or (Height < 10) then
+    Exit;
+  FinishAnim;
+  UpdateLayout;
+  From := PointF(Width / 2 - FCardW / 2, Height + 4);
+  for P := 0 to FGame.PileCount - 1 do
+    if FGame.PileKind(P) = pkStock then
+    begin
+      From := PilePos(P);
+      Break;
+    end;
+  N := 0;
+  MaxDepth := 0;
+  for P := 0 to FGame.PileCount - 1 do
+    if FGame.PileKind(P) <> pkStock then
+    begin
+      Inc(N, FGame.CardCount(P));
+      MaxDepth := Max(MaxDepth, FGame.CardCount(P));
+    end;
+  if N = 0 then
+    Exit;
+  Step := Min(0.03, 1.0 / N);   // however many cards, the deal takes about a second
+  Seq := 0;
+  for Depth := 0 to MaxDepth - 1 do
+    for P := 0 to FGame.PileCount - 1 do
+      if (FGame.PileKind(P) <> pkStock) and (FGame.CardCount(P) > Depth) then
+      begin
+        Card := FGame.CardAt(P, Depth);
+        FFlying[Card.Id] := True;
+        FFlyFrom[Card.Id] := From;
+        FFlyDelay[Card.Id] := Seq * Step;
+        Inc(Seq);
+      end;
+  FAnimTime := 0;
+  FAnimDur := 0.24;
+  FAnimEnd := FAnimDur + (Seq - 1) * Step;
+  FAnimActive := True;
+  FDealing := True;
+  StartTimer;
+  Repaint;
 end;
 
 { Runs a game action and animates every card that ended up somewhere else,

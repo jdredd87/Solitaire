@@ -3,7 +3,7 @@
 A FireMonkey (Delphi 13 / RAD Studio 37.0) solitaire collection for Windows, Android and iOS.
 
 - **Games:** Klondike (draw 1 / draw 3), Spider (1, 2 or 4 suits), FreeCell, Pyramid, TriPeaks
-- Rules guide for every game, hints, undo, auto-complete
+- Rules guide for every game, hints, undo, auto-complete, animated deals
 - Statistics kept per game and variant
 - Win effects: bouncing cards, fireworks, fountain, or random
 - Two card styles: Classic (corner indexes, traditional pips and pictured court cards; the default) and Modern (large rank and suit)
