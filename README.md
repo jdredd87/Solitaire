@@ -6,6 +6,7 @@ A FireMonkey (Delphi 13 / RAD Studio 37.0) solitaire collection for Windows, And
 - Rules guide for every game, hints, undo, auto-complete
 - Statistics kept per game and variant
 - Win effects: bouncing cards, fireworks, fountain, or random
+- Two card styles: Modern (large rank and suit) and Classic (corner indexes and traditional pips)
 - Portrait and landscape layouts; unfinished deals are saved per game
 
 ## Screenshots
@@ -25,6 +26,12 @@ A FireMonkey (Delphi 13 / RAD Studio 37.0) solitaire collection for Windows, And
 | Fireworks | Choosing a game | Phone: Klondike | Phone: TriPeaks |
 | --- | --- | --- | --- |
 | ![Fireworks](docs/screenshots/win-fireworks.png) | ![Choose a game](docs/screenshots/choose-game.png) | ![Klondike on a phone](docs/screenshots/phone-klondike.png) | ![TriPeaks on a phone](docs/screenshots/phone-tripeaks.png) |
+
+### Classic card style
+
+Menu → Options → Card style switches between the two looks.
+
+![Classic card style](docs/screenshots/classic-cards.png)
 
 ### Rotated phone (landscape)
 

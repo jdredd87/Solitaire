@@ -39,7 +39,7 @@ type
     FHelpItems: TList<TText>;
     FHelpClose: TButton;
     FOptTitle, FVariantLabel, FVariantNote: TText;
-    FBtnVariant, FBtnEffect, FBtnPreview, FBtnReset, FBtnOptClose: TButton;
+    FBtnVariant, FBtnEffect, FBtnStyle, FBtnPreview, FBtnReset, FBtnOptClose: TButton;
     FHeads: array[0..2] of TText;
     FCells: array[0..8, 0..2] of TText;
     FSelfTest: TObject;
@@ -78,6 +78,7 @@ type
     procedure GameRowClick(Sender: TObject);
     procedure VariantClick(Sender: TObject);
     procedure EffectClick(Sender: TObject);
+    procedure StyleClick(Sender: TObject);
     procedure PreviewClick(Sender: TObject);
     procedure ResetClick(Sender: TObject);
     procedure FormKey(Sender: TObject; var Key: Word; var KeyChar: WideChar; Shift: TShiftState);
@@ -322,6 +323,7 @@ begin
   FBoard.Parent := Self;
   FBoard.Align := TAlignLayout.Client;
   FBoard.WinEffect := TWinEffect(FStats.WinEffect);
+  FBoard.CardStyle := TCardStyle(FStats.CardStyle);
   FBoard.OnChanged := BoardChanged;
   FBoard.OnNewGameRequest := BoardNewGame;
 
@@ -422,7 +424,7 @@ var
   I, C: Integer;
   Y: Single;
 begin
-  P := MakePanel(pnOptions, PANEL_W, 484);
+  P := MakePanel(pnOptions, PANEL_W, 524);
   FOptTitle := MakeText(P, 16, 10, PANEL_W - 32, 28, 'Options and statistics', 17, True, TTextAlign.Center);
 
   // each setting is a short label plus a button that only shows the value,
@@ -440,20 +442,24 @@ begin
   FBtnPreview := MakeButton(P, 'Preview win effect', PreviewClick);
   FBtnPreview.SetBounds(16, 142, PANEL_W - 32, 34);
 
+  MakeText(P, 16, 182, 130, 34, 'Card style', 14, False, TTextAlign.Leading);
+  FBtnStyle := MakeButton(P, '', StyleClick);
+  FBtnStyle.SetBounds(150, 182, 154, 34);
+
   for C := 0 to 2 do
-    FHeads[C] := MakeText(P, 150 + C * 52, 186, 50, 22, '', 13, True, TTextAlign.Trailing);
+    FHeads[C] := MakeText(P, 150 + C * 52, 226, 50, 22, '', 13, True, TTextAlign.Trailing);
   for I := 0 to High(STAT_LABELS) do
   begin
-    Y := 210 + I * 24;
+    Y := 250 + I * 24;
     MakeText(P, 16, Y, 132, 22, STAT_LABELS[I], 13, False, TTextAlign.Leading);
     for C := 0 to 2 do
       FCells[I, C] := MakeText(P, 150 + C * 52, Y, 50, 22, '', 13, False, TTextAlign.Trailing);
   end;
 
   FBtnReset := MakeButton(P, 'Reset stats', ResetClick);
-  FBtnReset.SetBounds(16, 434, 140, 36);
+  FBtnReset.SetBounds(16, 474, 140, 36);
   FBtnOptClose := MakeButton(P, 'Close', CloseClick);
-  FBtnOptClose.SetBounds(164, 434, 140, 36);
+  FBtnOptClose.SetBounds(164, 474, 140, 36);
   FitButton(FBtnPreview);
   FitButton(FBtnReset);
   FitButton(FBtnOptClose);
@@ -574,6 +580,8 @@ begin
   end;
   FBtnEffect.Text := WIN_EFFECT_NAMES[TWinEffect(FStats.WinEffect)];
   FitButton(FBtnEffect);
+  FBtnStyle.Text := CARD_STYLE_NAMES[TCardStyle(FStats.CardStyle)];
+  FitButton(FBtnStyle);
 
   // one statistics column per variant, right-aligned against the panel edge
   for C := 0 to 2 do
@@ -1088,6 +1096,14 @@ begin
   FStats.WinEffect := (FStats.WinEffect + 1) mod (Ord(High(TWinEffect)) + 1);
   FStats.Save;
   FBoard.WinEffect := TWinEffect(FStats.WinEffect);
+  UpdateOptions;
+end;
+
+procedure TMainForm.StyleClick(Sender: TObject);
+begin
+  FStats.CardStyle := (FStats.CardStyle + 1) mod (Ord(High(TCardStyle)) + 1);
+  FStats.Save;
+  FBoard.CardStyle := TCardStyle(FStats.CardStyle);
   UpdateOptions;
 end;
 

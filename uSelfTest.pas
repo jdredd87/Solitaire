@@ -634,6 +634,21 @@ begin
 
       ST_FILES:
         begin
+          // the classic card faces, on a game that shows all 52 of them
+          FForm.SwitchGame(GameIndexOf('freecell'));
+          FForm.StartNewGame(1);
+          B.CardStyle := csClassic;
+          Check(B.CheckLayout(Msg), 'classic card style: layout is valid ' + Msg);
+          Shot('9-classic-freecell');
+          FForm.SwitchGame(GameIndexOf('spider'));
+          Shot('9-classic-spider');
+          FForm.ClientWidth := 390;
+          FForm.ClientHeight := 800;
+          FForm.SwitchGame(GameIndexOf('klondike'));
+          Shot('9-classic-portrait');
+          FForm.ClientWidth := 1000;
+          FForm.ClientHeight := 720;
+          B.CardStyle := csModern;
           FForm.SaveGame;
           for I := 0 to High(GAME_CLASSES) do
             Check(TFile.Exists(TPath.Combine(OutDir, 'game-' + GAME_CLASSES[I].GameId + '.dat')),

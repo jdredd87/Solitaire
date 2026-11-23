@@ -14,10 +14,14 @@ uses
 
 type
   TWinEffect = (weRandom, weBounce, weFireworks, weFountain);
+  /// csModern: rank and suit side by side along the top, one large suit below.
+  /// csClassic: rank over suit in opposite corners and the traditional pips.
+  TCardStyle = (csModern, csClassic);
 
 const
   WIN_EFFECT_NAMES: array[TWinEffect] of string =
     ('Random', 'Bouncing cards', 'Fireworks', 'Card fountain');
+  CARD_STYLE_NAMES: array[TCardStyle] of string = ('Modern', 'Classic');
   MAX_CARDS = 256;
 
 type
@@ -64,6 +68,7 @@ type
     FHintTime: Single;
     // win effects
     FWinEffect: TWinEffect;
+    FCardStyle: TCardStyle;
     FEffect, FLastEffect: TWinEffect;
     FWinActive, FWinPreview: Boolean;
     FWinTime: Single;
@@ -91,7 +96,9 @@ type
     function IsFlying(const C: TCard): Boolean;
 
     procedure DrawSuit(C: TCanvas; Suit: TSuit; const R: TRectF; Color: TAlphaColor; Opacity: Single);
-    procedure DrawCard(C: TCanvas; const ACard: TCard; const Pos: TPointF);
+    procedure DrawCard(C: TCanvas; const ACard: TCard; const Pos: TPointF; Strip: Single = 0);
+    procedure DrawClassicFace(C: TCanvas; const ACard: TCard; const R: TRectF; Col: TAlphaColor; Strip: Single);
+    procedure SetCardStyle(const Value: TCardStyle);
     procedure DrawSlot(C: TCanvas; P: Integer);
     procedure DrawPile(C: TCanvas; P: Integer);
     procedure DrawOutline(C: TCanvas; const R: TRectF; Color: TAlphaColor; Opacity: Single);
@@ -163,6 +170,7 @@ type
 
     property Game: TCardGame read FGame write SetGame;
     property WinEffect: TWinEffect read FWinEffect write FWinEffect;
+    property CardStyle: TCardStyle read FCardStyle write SetCardStyle;
     property OnChanged: TNotifyEvent read FOnChanged write FOnChanged;
     property OnNewGameRequest: TNotifyEvent read FOnNewGameRequest write FOnNewGameRequest;
   end;
@@ -489,7 +497,148 @@ begin
   C.FillPath(FTmpPath, Opacity);
 end;
 
-procedure TSolitaireBoard.DrawCard(C: TCanvas; const ACard: TCard; const Pos: TPointF);
+procedure TSolitaireBoard.SetCardStyle(const Value: TCardStyle);
+begin
+  if FCardStyle <> Value then
+  begin
+    FCardStyle := Value;
+    Repaint;
+  end;
+end;
+
+{ The traditional face: rank over suit in the top-left corner, the same again
+  upside down in the bottom-right, and one pip per point in between. Strip is
+  how much of the card the next one leaves showing (0 = all of it): when a long
+  column is squeezed the suit moves up beside the rank so it can still be read. }
+procedure TSolitaireBoard.DrawClassicFace(C: TCanvas; const ACard: TCard; const R: TRectF;
+  Col: TAlphaColor; Strip: Single);
+const
+  XL = 0.37;
+  XC = 0.50;
+  XR = 0.63;
+  Y1 = 0.22;     // top row; the bottom row mirrors it
+  Y2 = 0.403;    // second of four rows
+var
+  Saved, Flip: TMatrix;
+  Beside: Boolean;
+  PipS: Single;
+  T: TRectF;
+
+  procedure Corner;
+  var
+    S: Single;
+    B: TRectF;
+  begin
+    C.Fill.Color := Col;
+    C.Font.Size := FCardH * 0.135;
+    C.Font.Style := [TFontStyle.fsBold];
+    B := RectF(R.Left - FCardW * 0.03, R.Top + FCardH * 0.008, R.Left + FCardW * 0.31, R.Top + FCardH * 0.15);
+    C.FillText(B, RankName(ACard.Rank), False, 1, [], TTextAlign.Center, TTextAlign.Center);
+    S := FCardW * 0.15;
+    if Beside then
+      DrawSuit(C, ACard.Suit, RectF(R.Left + FCardW * 0.31, R.Top + FCardH * 0.08 - S / 2,
+        R.Left + FCardW * 0.31 + S, R.Top + FCardH * 0.08 + S / 2), Col, 1)
+    else
+      DrawSuit(C, ACard.Suit, RectF(R.Left + FCardW * 0.14 - S / 2, R.Top + FCardH * 0.148,
+        R.Left + FCardW * 0.14 + S / 2, R.Top + FCardH * 0.148 + S), Col, 1);
+  end;
+
+  // X, Y are fractions of the card; pips in the lower half stand on their heads
+  procedure Pip(X, Y, Size: Single);
+  var
+    P: TPointF;
+    Turned: Boolean;
+  begin
+    Turned := Y > 0.5;
+    if Turned then
+    begin
+      C.SetMatrix(Flip);
+      X := 1 - X;
+      Y := 1 - Y;
+    end;
+    P := PointF(R.Left + X * FCardW, R.Top + Y * FCardH);
+    DrawSuit(C, ACard.Suit, RectF(P.X - Size / 2, P.Y - Size / 2, P.X + Size / 2, P.Y + Size / 2), Col, 1);
+    if Turned then
+      C.SetMatrix(Saved);
+  end;
+
+  procedure Pair(Y: Single);
+  begin
+    Pip(XL, Y, PipS);
+    Pip(XR, Y, PipS);
+  end;
+
+begin
+  Saved := C.Matrix;
+  // a half turn about the middle of the card
+  Flip := TMatrix.CreateScaling(-1, -1) * TMatrix.CreateTranslation(R.Left + R.Right, R.Top + R.Bottom) * Saved;
+  Beside := (Strip > 0) and (Strip < FCardH * 0.25);
+  PipS := FCardW * 0.18;
+
+  Corner;
+  C.SetMatrix(Flip);
+  Corner;
+  C.SetMatrix(Saved);
+
+  case ACard.Rank of
+    1:
+      Pip(XC, 0.5, FCardW * 0.42);
+    2, 3:
+      begin
+        Pip(XC, Y1, PipS);
+        Pip(XC, 1 - Y1, PipS);
+        if ACard.Rank = 3 then
+          Pip(XC, 0.5, PipS);
+      end;
+    4, 5:
+      begin
+        Pair(Y1);
+        Pair(1 - Y1);
+        if ACard.Rank = 5 then
+          Pip(XC, 0.5, PipS);
+      end;
+    6, 7, 8:
+      begin
+        Pair(Y1);
+        Pair(0.5);
+        Pair(1 - Y1);
+        if ACard.Rank >= 7 then
+          Pip(XC, 0.355, PipS);
+        if ACard.Rank = 8 then
+          Pip(XC, 0.645, PipS);
+      end;
+    9, 10:
+      begin
+        Pair(Y1);
+        Pair(Y2);
+        Pair(1 - Y2);
+        Pair(1 - Y1);
+        if ACard.Rank = 9 then
+          Pip(XC, 0.5, PipS)
+        else
+        begin
+          Pip(XC, 0.305, PipS);
+          Pip(XC, 0.695, PipS);
+        end;
+      end;
+  else
+    // court cards: a framed panel with the letter, and a suit in two of its corners
+    T := RectF(R.Left + FCardW * 0.27, R.Top + FCardH * 0.13, R.Right - FCardW * 0.27, R.Bottom - FCardH * 0.13);
+    C.Fill.Color := Col;
+    C.FillRect(T, FCardW * 0.04, FCardW * 0.04, AllCorners, 0.09);
+    C.Stroke.Color := Col;
+    C.Stroke.Thickness := Max(1, FCardW * 0.015);
+    C.DrawRect(T, FCardW * 0.04, FCardW * 0.04, AllCorners, 0.8);
+    C.Stroke.Thickness := 1;
+    C.Font.Size := FCardH * 0.30;
+    C.Font.Style := [TFontStyle.fsBold];
+    C.FillText(T, RankName(ACard.Rank), False, 1, [], TTextAlign.Center, TTextAlign.Center);
+    Pip(0.36, 0.215, FCardW * 0.14);
+    Pip(0.64, 0.785, FCardW * 0.14);
+  end;
+end;
+
+procedure TSolitaireBoard.DrawCard(C: TCanvas; const ACard: TCard; const Pos: TPointF; Strip: Single);
 var
   R, T: TRectF;
   Rad, S: Single;
@@ -530,6 +679,12 @@ begin
     Col := COL_RED
   else
     Col := COL_BLACK;
+
+  if FCardStyle = csClassic then
+  begin
+    DrawClassicFace(C, ACard, R, Col, Strip);
+    Exit;
+  end;
 
   // rank, top-left
   C.Fill.Color := Col;
@@ -592,6 +747,7 @@ end;
 procedure TSolitaireBoard.DrawPile(C: TCanvas; P: Integer);
 var
   N, Limit, I, First, Lim: Integer;
+  Strip: Single;
   S: TPileSlot;
   Card: TCard;
   Drawn: Boolean;
@@ -628,7 +784,11 @@ begin
       Card := FGame.CardAt(P, I);
       if not IsFlying(Card) then
       begin
-        DrawCard(C, Card, CardPos(P, I));
+        // how much of this card the next one in a downward fan leaves showing
+        Strip := 0;
+        if (S.Fan = fnDown) and (I < Limit - 1) then
+          Strip := CardPos(P, I + 1).Y - CardPos(P, I).Y;
+        DrawCard(C, Card, CardPos(P, I), Strip);
         Drawn := True;
       end;
     end;

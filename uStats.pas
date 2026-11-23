@@ -32,6 +32,7 @@ type
   public
     CurrentGame: string;  // game id shown at start-up
     WinEffect: Integer;   // ordinal of TWinEffect
+    CardStyle: Integer;   // ordinal of TCardStyle
     constructor Create;
     destructor Destroy; override;
     procedure Load;
@@ -84,6 +85,7 @@ begin
   FFileName := TPath.Combine(AppDataDir, 'solitaire.ini');
   CurrentGame := 'klondike';
   WinEffect := 0;
+  CardStyle := 0;
   Load;
 end;
 
@@ -150,6 +152,7 @@ begin
     try
       CurrentGame := LowerCase(Ini.ReadString('Settings', 'Game', 'klondike'));
       WinEffect := EnsureRange(Ini.ReadInteger('Settings', 'WinEffect', 0), 0, 3);
+      CardStyle := EnsureRange(Ini.ReadInteger('Settings', 'CardStyle', 0), 0, 1);
 
       Ini.ReadSection('Variants', Keys);
       for K in Keys do
@@ -195,6 +198,7 @@ begin
       Ini.Clear;
       Ini.WriteString('Settings', 'Game', CurrentGame);
       Ini.WriteInteger('Settings', 'WinEffect', WinEffect);
+      Ini.WriteInteger('Settings', 'CardStyle', CardStyle);
       for V in FVariants do
         Ini.WriteInteger('Variants', V.Key, V.Value);
       for Pair in FStats do
