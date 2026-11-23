@@ -2,6 +2,8 @@
 
 A FireMonkey (Delphi 13 / RAD Studio 37.0) solitaire collection for Windows, Android and iOS.
 
+**Video:** [the app playing itself on Windows and Android](https://www.youtube.com/watch?v=Eaa12V3tFnY) (10 minutes, with sound).
+
 - **Games:** Klondike (draw 1 / draw 3), Spider (1, 2 or 4 suits), FreeCell, Pyramid, TriPeaks
 - Rules guide for every game, hints, undo, auto-complete, animated deals
 - Statistics kept per game and variant
