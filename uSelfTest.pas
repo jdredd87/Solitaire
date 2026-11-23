@@ -277,6 +277,7 @@ var
   I, Before: Integer;
   H: THint;
   E: TWinEffect;
+  SK: TSoundKind;
   M: TModeStats;
   Msg: string;
   Seen: array[0..2] of TWinEffect;
@@ -690,8 +691,8 @@ begin
               Format('%s deal is saved to disk', [GAME_CLASSES[I].Title]));
           Check(TFile.Exists(TPath.Combine(OutDir, 'solitaire.ini')), 'statistics are saved to disk');
           Check(not FForm.Stats.Sounds, 'sounds are off by default');
-          Check(TFile.GetSize(SoundFile(skShuffle)) > 20000, 'the shuffle sound is generated');
-          Check(TFile.GetSize(SoundFile(skWin)) > 20000, 'the win sound is generated');
+          for SK := Low(TSoundKind) to High(TSoundKind) do
+            Check(TFile.GetSize(SoundFile(SK)) > 5000, Format('sound %d is generated', [Ord(SK)]));
           GoStep(ST_END);
         end;
     else

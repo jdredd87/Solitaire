@@ -80,6 +80,7 @@ type
     procedure EffectClick(Sender: TObject);
     procedure StyleClick(Sender: TObject);
     procedure SoundClick(Sender: TObject);
+    procedure BoardSound(Sender: TObject; Sound: TBoardSound);
     procedure PreviewClick(Sender: TObject);
     procedure ResetClick(Sender: TObject);
     procedure FormKey(Sender: TObject; var Key: Word; var KeyChar: WideChar; Shift: TShiftState);
@@ -327,6 +328,7 @@ begin
   FBoard.CardStyle := TCardStyle(FStats.CardStyle);
   FBoard.OnChanged := BoardChanged;
   FBoard.OnNewGameRequest := BoardNewGame;
+  FBoard.OnSound := BoardSound;
 
   FClock := TTimer.Create(Self);
   FClock.Interval := 1000;
@@ -963,8 +965,6 @@ begin
   begin
     FGame.WinRecorded := True;
     FStats.RecordWin(FGame.GameId, FGame.Variant, FGame.Seconds, FGame.Score, FGame.Moves);
-    if FStats.Sounds then
-      PlayGameSound(skWin);
     SaveGame;
   end;
   FNote := '';
@@ -1119,6 +1119,14 @@ begin
   FStats.Save;
   FBoard.CardStyle := TCardStyle(FStats.CardStyle);
   UpdateOptions;
+end;
+
+procedure TMainForm.BoardSound(Sender: TObject; Sound: TBoardSound);
+const
+  KIND: array[TBoardSound] of TSoundKind = (skWin, skBounce, skBurst, skWhoosh);
+begin
+  if FStats.Sounds then
+    PlayGameSound(KIND[Sound]);
 end;
 
 procedure TMainForm.SoundClick(Sender: TObject);

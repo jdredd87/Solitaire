@@ -7,7 +7,7 @@ A FireMonkey (Delphi 13 / RAD Studio 37.0) solitaire collection for Windows, And
 - Statistics kept per game and variant
 - Win effects: bouncing cards, fireworks, fountain, or random
 - Two card styles: Classic (corner indexes, traditional pips and pictured court cards; the default) and Modern (large rank and suit)
-- Optional sounds (cards being dealt when a game starts, chimes on a win); off by default
+- Optional sounds (cards being dealt, chimes on a win, and bounces, firework bursts and whooshes for the win effects); off by default
 - Portrait and landscape layouts; unfinished deals are saved per game
 
 ## Screenshots
@@ -72,7 +72,7 @@ The demo keeps its own deals and statistics, so yours are untouched.
 | `uBoard.pas` | Board control: layout, card drawing, animation, win effects |
 | `uMain.pas` | Form, toolbar, menus, help and options panels |
 | `uStats.pas` | Statistics and settings |
-| `uSound.pas` | Shuffle and win sounds, synthesised at run time (no audio files) |
+| `uSound.pas` | Deal, win and win-effect sounds, synthesised at run time (no audio files) |
 | `uAutoPlay.pas`, `uSelfTest.pas`, `uDemo.pas` | Hint-following player, the in-app UI self-test and the demo mode |
 | `tests\` | Console tests for the game engines |
 | `tools\` | Deploy, artwork and deployproj scripts |

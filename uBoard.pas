@@ -17,6 +17,9 @@ type
   /// csModern: rank and suit side by side along the top, one large suit below.
   /// csClassic: rank over suit in opposite corners and the traditional pips.
   TCardStyle = (csModern, csClassic);
+  /// Moments in a win effect that have a sound of their own.
+  TBoardSound = (bsWin, bsBounce, bsBurst, bsLaunch);
+  TBoardSoundEvent = procedure(Sender: TObject; Sound: TBoardSound) of object;
 
 const
   WIN_EFFECT_NAMES: array[TWinEffect] of string =
@@ -44,6 +47,7 @@ type
     FGame: TCardGame;
     FOnChanged: TNotifyEvent;
     FOnNewGameRequest: TNotifyEvent;
+    FOnSound: TBoardSoundEvent;
     // layout
     FCardW, FCardH, FGap, FLeft, FTop: Single;
     FWide: Boolean;
@@ -95,6 +99,7 @@ type
     function FindDropPile: Integer;
     function IsFlying(const C: TCard): Boolean;
 
+    procedure Sound(S: TBoardSound);
     procedure DrawSuit(C: TCanvas; Suit: TSuit; const R: TRectF; Color: TAlphaColor; Opacity: Single);
     procedure DrawCard(C: TCanvas; const ACard: TCard; const Pos: TPointF; Strip: Single = 0);
     procedure DrawClassicFace(C: TCanvas; const ACard: TCard; const R: TRectF; Col: TAlphaColor; Strip: Single);
@@ -175,6 +180,7 @@ type
     function SampleCards(const Cards: array of TCard; Zoom: Single): TBitmap;
     property OnChanged: TNotifyEvent read FOnChanged write FOnChanged;
     property OnNewGameRequest: TNotifyEvent read FOnNewGameRequest write FOnNewGameRequest;
+    property OnSound: TBoardSoundEvent read FOnSound write FOnSound;
   end;
 
 implementation
@@ -1348,6 +1354,12 @@ begin
     Result := 1;
 end;
 
+procedure TSolitaireBoard.Sound(S: TBoardSound);
+begin
+  if Assigned(FOnSound) then
+    FOnSound(Self, S);
+end;
+
 procedure TSolitaireBoard.StartWin(Preview: Boolean);
 var
   E: TWinEffect;
@@ -1380,6 +1392,7 @@ begin
   end;
   StartTimer;
   Repaint;
+  Sound(bsWin);
 end;
 
 procedure TSolitaireBoard.StopWin;
@@ -1487,6 +1500,8 @@ begin
   if FBouncePos.Y + FCardH > Height then
   begin
     FBouncePos.Y := Height - FCardH;
+    if FBounceVel.Y > 2.5 * U then   // the last little hops are silent
+      Sound(bsBounce);
     FBounceVel.Y := -FBounceVel.Y * 0.83;
   end;
   DrawCard(C, FBounceCard, FBouncePos);
@@ -1523,6 +1538,7 @@ begin
   if (FNextBurst <= 0) and (FParticles.Count < 220) then
   begin
     FNextBurst := 0.25 + Random * 0.5;
+    Sound(bsBurst);
     Center := PointF(Width * (0.12 + Random * 0.76), Height * (0.12 + Random * 0.5));
     Col := SPARK_COLORS[Random(Length(SPARK_COLORS))];
     Suit := TSuit(Random(4));
@@ -1590,7 +1606,10 @@ begin
     begin
       FFly[I].Delay := FFly[I].Delay - Dt;
       if FFly[I].Delay <= 0 then
+      begin
         LaunchFly(FFly[I]);
+        Sound(bsLaunch);
+      end;
     end;
 end;
 
