@@ -785,6 +785,7 @@ begin
   FGame := GAME_CLASSES[FGameIndex].Create;
   LoadOrDeal;
   FBoard.Game := FGame;
+  FBoard.AnimateDealWhenShown;
   UpdateStatus;
 
   if SelfTesting then
@@ -924,6 +925,7 @@ begin
   FGame := GAME_CLASSES[AIndex].Create;
   LoadOrDeal;
   FBoard.Game := FGame;
+  FBoard.AnimateDealWhenShown;
   Old.Free;
   FStats.CurrentGame := FGame.GameId;
   FStats.Save;

@@ -63,6 +63,7 @@ type
     FAnimActive: Boolean;
     FDealing: Boolean;          // the animation in progress is a fresh deal
     FDealAnimation: Boolean;
+    FDealPending: Boolean;      // deal as soon as the table is next painted
     FAnimTime, FAnimDur, FAnimEnd: Single;
     FFlying: array[0..MAX_CARDS - 1] of Boolean;
     FFlyFrom: array[0..MAX_CARDS - 1] of TPointF;
@@ -186,6 +187,9 @@ type
     property OnSound: TBoardSoundEvent read FOnSound write FOnSound;
     /// Lays a fresh deal out card by card. Call right after the game was dealt.
     procedure AnimateDeal;
+    /// The same, but started by the next repaint: for when the table is not
+    /// on screen, or not at its final size, yet.
+    procedure AnimateDealWhenShown;
     /// False makes AnimateDeal do nothing (and ends a deal that is under way).
     property DealAnimation: Boolean read FDealAnimation write SetDealAnimation;
   end;
@@ -1118,6 +1122,8 @@ var
   I: Integer;
   Pt: TParticle;
 begin
+  if FDealPending then
+    AnimateDeal;
   UpdateLayout;
   begin
     // the table (without any cards that have bounced away) is always the bottom layer
@@ -1199,6 +1205,12 @@ begin
   end;
 end;
 
+procedure TSolitaireBoard.AnimateDealWhenShown;
+begin
+  FDealPending := True;
+  Repaint;
+end;
+
 { A new game: the cards fly out one after another, a row at a time as a dealer
   would, from the stock - or from below the table in a game that has none. }
 procedure TSolitaireBoard.AnimateDeal;
@@ -1208,6 +1220,7 @@ var
   Step: Single;
   Card: TCard;
 begin
+  FDealPending := False;
   if (FGame = nil) or not FDealAnimation or (Width < 10) or (Height < 10) then
     Exit;
   FinishAnim;
