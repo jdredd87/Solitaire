@@ -892,6 +892,9 @@ begin
   end;
   if (not Ok) or FGame.IsWon then
     FGame.NewGame(FStats.GetVariant(FGame.GameId));
+  // the cards are laid out, whether a new deal or the one left last time
+  if FStats.Sounds then
+    PlayGameSound(skShuffle);
 end;
 
 { ---------- game flow ---------- }

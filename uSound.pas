@@ -23,10 +23,10 @@ uses
 
 const
   RATE = 44100;
-  FILE_NAMES: array[TSoundKind] of string = ('solitaire-deal-2.wav', 'solitaire-win-2.wav',
+  FILE_NAMES: array[TSoundKind] of string = ('solitaire-deal-2.wav', 'solitaire-win-3.wav',
     'solitaire-bounce-1.wav', 'solitaire-burst-1.wav', 'solitaire-whoosh-1.wav');
   // how loud each sound is, the chimes being the loudest
-  GAIN: array[TSoundKind] of Single = (0.8, 0.8, 0.45, 0.6, 0.3);
+  GAIN: array[TSoundKind] of Single = (0.8, 0.56, 0.45, 0.6, 0.3);
   // the same sound is not started again within this many milliseconds
   MIN_GAP: array[TSoundKind] of Integer = (0, 0, 70, 120, 280);
 
