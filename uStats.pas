@@ -33,6 +33,7 @@ type
     CurrentGame: string;  // game id shown at start-up
     WinEffect: Integer;   // ordinal of TWinEffect
     CardStyle: Integer;   // ordinal of TCardStyle
+    Sounds: Boolean;      // shuffle and win sounds
     constructor Create;
     destructor Destroy; override;
     procedure Load;
@@ -86,6 +87,7 @@ begin
   CurrentGame := 'klondike';
   WinEffect := 0;
   CardStyle := 1;   // Classic
+  Sounds := False;
   Load;
 end;
 
@@ -153,6 +155,7 @@ begin
       CurrentGame := LowerCase(Ini.ReadString('Settings', 'Game', 'klondike'));
       WinEffect := EnsureRange(Ini.ReadInteger('Settings', 'WinEffect', 0), 0, 3);
       CardStyle := EnsureRange(Ini.ReadInteger('Settings', 'CardStyle', 1), 0, 1);
+      Sounds := Ini.ReadBool('Settings', 'Sounds', False);
 
       Ini.ReadSection('Variants', Keys);
       for K in Keys do
@@ -199,6 +202,7 @@ begin
       Ini.WriteString('Settings', 'Game', CurrentGame);
       Ini.WriteInteger('Settings', 'WinEffect', WinEffect);
       Ini.WriteInteger('Settings', 'CardStyle', CardStyle);
+      Ini.WriteBool('Settings', 'Sounds', Sounds);
       for V in FVariants do
         Ini.WriteInteger('Variants', V.Key, V.Value);
       for Pair in FStats do

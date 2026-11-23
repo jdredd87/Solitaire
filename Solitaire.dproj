@@ -375,6 +375,7 @@
         <DCCReference Include="uAutoPlay.pas"/>
         <DCCReference Include="uSelfTest.pas"/>
         <DCCReference Include="uDemo.pas"/>
+        <DCCReference Include="uSound.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

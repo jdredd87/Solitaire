@@ -17,7 +17,7 @@ uses
   System.SysUtils, System.Types, System.UITypes, System.Classes, System.IOUtils,
   System.Diagnostics, System.Math,
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics,
-  uCardGame, uGames, uStats, uBoard, uAutoPlay, uMain;
+  uCardGame, uGames, uStats, uBoard, uAutoPlay, uSound, uMain;
 
 type
   TSelfTest = class
@@ -689,6 +689,9 @@ begin
             Check(TFile.Exists(TPath.Combine(OutDir, 'game-' + GAME_CLASSES[I].GameId + '.dat')),
               Format('%s deal is saved to disk', [GAME_CLASSES[I].Title]));
           Check(TFile.Exists(TPath.Combine(OutDir, 'solitaire.ini')), 'statistics are saved to disk');
+          Check(not FForm.Stats.Sounds, 'sounds are off by default');
+          Check(TFile.GetSize(SoundFile(skShuffle)) > 20000, 'the shuffle sound is generated');
+          Check(TFile.GetSize(SoundFile(skWin)) > 20000, 'the win sound is generated');
           GoStep(ST_END);
         end;
     else

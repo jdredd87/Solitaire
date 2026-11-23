@@ -536,7 +536,7 @@ var
     C.Font.Style := [TFontStyle.fsBold];
     B := RectF(R.Left - FCardW * 0.03, R.Top + FCardH * 0.008, R.Left + FCardW * 0.31, R.Top + FCardH * 0.15);
     C.FillText(B, RankName(ACard.Rank), False, 1, [], TTextAlign.Center, TTextAlign.Center);
-    S := FCardW * 0.15;
+    S := FCardW * 0.1275;
     if Beside then
       DrawSuit(C, ACard.Suit, RectF(R.Left + FCardW * 0.31, R.Top + FCardH * 0.08 - S / 2,
         R.Left + FCardW * 0.31 + S, R.Top + FCardH * 0.08 + S / 2), Col, 1)

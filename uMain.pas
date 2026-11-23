@@ -39,7 +39,7 @@ type
     FHelpItems: TList<TText>;
     FHelpClose: TButton;
     FOptTitle, FVariantLabel, FVariantNote: TText;
-    FBtnVariant, FBtnEffect, FBtnStyle, FBtnPreview, FBtnReset, FBtnOptClose: TButton;
+    FBtnVariant, FBtnEffect, FBtnStyle, FBtnSound, FBtnPreview, FBtnReset, FBtnOptClose: TButton;
     FHeads: array[0..2] of TText;
     FCells: array[0..8, 0..2] of TText;
     FSelfTest: TObject;
@@ -79,6 +79,7 @@ type
     procedure VariantClick(Sender: TObject);
     procedure EffectClick(Sender: TObject);
     procedure StyleClick(Sender: TObject);
+    procedure SoundClick(Sender: TObject);
     procedure PreviewClick(Sender: TObject);
     procedure ResetClick(Sender: TObject);
     procedure FormKey(Sender: TObject; var Key: Word; var KeyChar: WideChar; Shift: TShiftState);
@@ -114,7 +115,7 @@ implementation
 {$R *.fmx}
 
 uses
-  uSelfTest, uDemo;
+  uSelfTest, uDemo, uSound;
 
 const
   PANEL_W = 320;
@@ -424,7 +425,7 @@ var
   I, C: Integer;
   Y: Single;
 begin
-  P := MakePanel(pnOptions, PANEL_W, 524);
+  P := MakePanel(pnOptions, PANEL_W, 564);
   FOptTitle := MakeText(P, 16, 10, PANEL_W - 32, 28, 'Options and statistics', 17, True, TTextAlign.Center);
 
   // each setting is a short label plus a button that only shows the value,
@@ -446,20 +447,24 @@ begin
   FBtnStyle := MakeButton(P, '', StyleClick);
   FBtnStyle.SetBounds(150, 182, 154, 34);
 
+  MakeText(P, 16, 222, 130, 34, 'Sounds', 14, False, TTextAlign.Leading);
+  FBtnSound := MakeButton(P, '', SoundClick);
+  FBtnSound.SetBounds(150, 222, 154, 34);
+
   for C := 0 to 2 do
-    FHeads[C] := MakeText(P, 150 + C * 52, 226, 50, 22, '', 13, True, TTextAlign.Trailing);
+    FHeads[C] := MakeText(P, 150 + C * 52, 266, 50, 22, '', 13, True, TTextAlign.Trailing);
   for I := 0 to High(STAT_LABELS) do
   begin
-    Y := 250 + I * 24;
+    Y := 290 + I * 24;
     MakeText(P, 16, Y, 132, 22, STAT_LABELS[I], 13, False, TTextAlign.Leading);
     for C := 0 to 2 do
       FCells[I, C] := MakeText(P, 150 + C * 52, Y, 50, 22, '', 13, False, TTextAlign.Trailing);
   end;
 
   FBtnReset := MakeButton(P, 'Reset stats', ResetClick);
-  FBtnReset.SetBounds(16, 474, 140, 36);
+  FBtnReset.SetBounds(16, 514, 140, 36);
   FBtnOptClose := MakeButton(P, 'Close', CloseClick);
-  FBtnOptClose.SetBounds(164, 474, 140, 36);
+  FBtnOptClose.SetBounds(164, 514, 140, 36);
   FitButton(FBtnPreview);
   FitButton(FBtnReset);
   FitButton(FBtnOptClose);
@@ -582,6 +587,11 @@ begin
   FitButton(FBtnEffect);
   FBtnStyle.Text := CARD_STYLE_NAMES[TCardStyle(FStats.CardStyle)];
   FitButton(FBtnStyle);
+  if FStats.Sounds then
+    FBtnSound.Text := 'On'
+  else
+    FBtnSound.Text := 'Off';
+  FitButton(FBtnSound);
 
   // one statistics column per variant, right-aligned against the panel edge
   for C := 0 to 2 do
@@ -890,6 +900,8 @@ begin
     FStats.RecordLoss(FGame.GameId, FGame.Variant);
   FGame.NewGame(FStats.GetVariant(FGame.GameId), ASeed);
   FBoard.Reset;
+  if FStats.Sounds then
+    PlayGameSound(skShuffle);
   UpdateStatus;
   SaveGame;
 end;
@@ -951,6 +963,8 @@ begin
   begin
     FGame.WinRecorded := True;
     FStats.RecordWin(FGame.GameId, FGame.Variant, FGame.Seconds, FGame.Score, FGame.Moves);
+    if FStats.Sounds then
+      PlayGameSound(skWin);
     SaveGame;
   end;
   FNote := '';
@@ -1104,6 +1118,15 @@ begin
   FStats.CardStyle := (FStats.CardStyle + 1) mod (Ord(High(TCardStyle)) + 1);
   FStats.Save;
   FBoard.CardStyle := TCardStyle(FStats.CardStyle);
+  UpdateOptions;
+end;
+
+procedure TMainForm.SoundClick(Sender: TObject);
+begin
+  FStats.Sounds := not FStats.Sounds;
+  FStats.Save;
+  if FStats.Sounds then
+    PlayGameSound(skShuffle);   // so the player hears what was switched on
   UpdateOptions;
 end;
 

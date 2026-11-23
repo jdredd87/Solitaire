@@ -15,7 +15,8 @@ uses
   uStats in 'uStats.pas',
   uAutoPlay in 'uAutoPlay.pas',
   uSelfTest in 'uSelfTest.pas',
-  uDemo in 'uDemo.pas';
+  uDemo in 'uDemo.pas',
+  uSound in 'uSound.pas';
 
 {$R *.res}
 
