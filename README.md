@@ -63,6 +63,8 @@ The app can play every game by itself, at a pace you can follow, which is handy 
 
 The demo keeps its own deals and statistics, so yours are untouched.
 
+The demo plays with sounds on. Screen recorders often capture no audio, so it also writes `sounds.log` to its data folder (the `demo` subfolder): one line per sound with the time in milliseconds. Every few seconds it logs a `mark` line and shows a faint square in the table's top-left corner for a moment; finding those squares in a recording gives the offset needed to mix a matching sound track.
+
 ## Layout
 
 | Path | What |

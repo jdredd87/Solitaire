@@ -19,7 +19,7 @@ uses
   System.SysUtils, System.Types, System.UITypes, System.Classes, System.IOUtils,
   System.Diagnostics, System.Math,
   FMX.Types, FMX.Forms,
-  uCardGame, uGames, uStats, uBoard, uAutoPlay, uMain;
+  uCardGame, uGames, uStats, uBoard, uAutoPlay, uSound, uMain;
 
 type
   TDemo = class
@@ -28,7 +28,7 @@ type
     FTimer: TTimer;
     FPlayer: TAutoPlayer;
     FG, FStep: Integer;
-    FStepWatch, FIdle, FDragWatch: TStopwatch;
+    FStepWatch, FIdle, FDragWatch, FMarkWatch: TStopwatch;
     FDragging: Boolean;
     FDragFrom, FDragTo: TPointF;
     FQuitAtEnd: Boolean;
@@ -74,6 +74,7 @@ const
   ST_PLAY = 2;
   ST_WIN = 3;
   ST_NEXT = 4;
+  MARK_EVERY = 7.0;        // seconds between sync marks
 
 function DemoRequested: Boolean;
 var
@@ -113,8 +114,13 @@ begin
   inherited Create;
   FForm := AForm;
   FQuitAtEnd := FindCmdLineSwitch('demo');
+  // the demo is heard as well as seen; what plays is logged so that a sound
+  // track can be added to a silent screen recording
+  FForm.Stats.Sounds := True;
+  SoundLogFile := TPath.Combine(AppDataDir, 'sounds.log');
   FStepWatch := TStopwatch.StartNew;
   FIdle := TStopwatch.StartNew;
+  FMarkWatch := TStopwatch.StartNew;
   FTimer := TTimer.Create(nil);
   FTimer.Interval := 16;
   FTimer.OnTimer := Tick;
@@ -214,6 +220,13 @@ var
 begin
   B := FForm.Board;
   try
+    // the same moment in the sound log and, faintly, on screen
+    if FMarkWatch.Elapsed.TotalSeconds >= MARK_EVERY then
+    begin
+      FMarkWatch := TStopwatch.StartNew;
+      LogSoundMark('mark');
+      B.SyncMark;
+    end;
     case FStep of
       ST_WAIT:
         if FStepWatch.Elapsed.TotalSeconds > 1.5 then

@@ -64,6 +64,7 @@ type
     FDealing: Boolean;          // the animation in progress is a fresh deal
     FDealAnimation: Boolean;
     FDealPending: Boolean;      // deal as soon as the table is next painted
+    FFlashTime: Single;         // > 0 while the sync mark is showing
     FAnimTime, FAnimDur, FAnimEnd: Single;
     FFlying: array[0..MAX_CARDS - 1] of Boolean;
     FFlyFrom: array[0..MAX_CARDS - 1] of TPointF;
@@ -190,6 +191,9 @@ type
     /// The same, but started by the next repaint: for when the table is not
     /// on screen, or not at its final size, yet.
     procedure AnimateDealWhenShown;
+    /// Shows a small, faint square in the top-left corner for a moment: a mark
+    /// that software can find in a screen recording to line a sound track up.
+    procedure SyncMark;
     /// False makes AnimateDeal do nothing (and ends a deal that is under way).
     property DealAnimation: Boolean read FDealAnimation write SetDealAnimation;
   end;
@@ -198,6 +202,7 @@ implementation
 
 const
   COL_FELT   = $FF1B6B3A;
+  COL_SYNC   = $FF1B6B6E;   // the felt with more blue: easy to detect, hard to see
   COL_FACE   = $FFFDFDF8;
   COL_EDGE   = $FF7A7A7A;
   COL_RED    = $FFD12B2B;
@@ -1003,6 +1008,12 @@ begin
     for I := FDragIndex to N - 1 do
       DrawCard(C, FGame.CardAt(FDragPile, I), FDragPos + (CardPos(FDragPile, I) - Base));
   end;
+
+  if FFlashTime > 0 then
+  begin
+    C.Fill.Color := COL_SYNC;
+    C.FillRect(RectF(0, 0, 24, 24), 0, 0, AllCorners, 1);
+  end;
 end;
 
 procedure TSolitaireBoard.PaintHighlights(C: TCanvas);
@@ -1205,6 +1216,13 @@ begin
   end;
 end;
 
+procedure TSolitaireBoard.SyncMark;
+begin
+  FFlashTime := 0.2;
+  StartTimer;
+  Repaint;
+end;
+
 procedure TSolitaireBoard.AnimateDealWhenShown;
 begin
   FDealPending := True;
@@ -1380,6 +1398,8 @@ begin
 
   if FHintTime > 0 then
     FHintTime := Max(0, FHintTime - Dt);
+  if FFlashTime > 0 then
+    FFlashTime := Max(0, FFlashTime - Dt);
 
   if FWinActive then
   begin
@@ -1402,7 +1422,7 @@ begin
     end;
   end;
 
-  if not (FAnimActive or FWinActive or (FHintTime > 0)) then
+  if not (FAnimActive or FWinActive or (FHintTime > 0) or (FFlashTime > 0)) then
     FTimer.Enabled := False;
   Repaint;
 end;

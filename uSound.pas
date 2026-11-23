@@ -15,6 +15,14 @@ procedure PlayGameSound(Kind: TSoundKind);
 /// The sound's WAV file, written on first use.
 function SoundFile(Kind: TSoundKind): string;
 
+var
+  /// When set, every sound that starts is noted in this file with its time in
+  /// milliseconds, so a sound track can be put to a silent screen recording.
+  SoundLogFile: string = '';
+
+/// Adds a named moment to the sound log.
+procedure LogSoundMark(const Name: string);
+
 implementation
 
 uses
@@ -383,6 +391,15 @@ end;
 
 {$ENDIF}
 
+procedure LogSoundMark(const Name: string);
+begin
+  if SoundLogFile <> '' then
+    try
+      TFile.AppendAllText(SoundLogFile, Format('%d %s'#10, [Clock.ElapsedMilliseconds, Name]));
+    except
+    end;
+end;
+
 procedure PlayGameSound(Kind: TSoundKind);
 var
   Now: Int64;
@@ -392,6 +409,7 @@ begin
     if (MIN_GAP[Kind] > 0) and (LastPlayed[Kind] > 0) and (Now - LastPlayed[Kind] < MIN_GAP[Kind]) then
       Exit;
     LastPlayed[Kind] := Max(1, Now);
+    LogSoundMark(FILE_NAMES[Kind]);
     Start(Kind);
   except
     // sound is a nicety; never let it get in the way of the game
